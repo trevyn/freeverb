@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  schedule: [cron: "40 4 * * *"]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  checklinks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: trevyn/lychee-action@v1
+        id: lychee
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --verbose --no-progress --header="accept=text/html" "**/*.md" "**/*.rs" "**/*.json" "**/*.toml" "**/*.yml"
+
+      - name: Fail if there were link-check errors
+        run: exit ${{ steps.lychee.outputs.exit_code }}
+
+  test:
+    name: test rust ${{ matrix.rust }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: ["1.56", stable, beta, nightly]
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup default ${{ matrix.rust }} && rustup update ${{ matrix.rust }}
+      - run: cargo test
+      - run: cargo doc --no-deps
+
+  publish:
+    needs: [checklinks, test]
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.message, 'freeverb@') && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: rustup default stable && rustup update stable
+
+      - name: cargo publish
+        run: cargo publish --no-verify --token ${{ secrets.CARGO_TOKEN }}
