@@ -1,7 +1,0 @@
-[package]
-name = "freeverb"
-version = "0.1.0"
-authors = ["irh <ian.r.hobson@gmail.com>"]
-edition = "2021"
-
-[dependencies]
