@@ -54,6 +54,7 @@ fn adjust_length(length: usize, sr: usize) -> usize {
 }
 
 impl Freeverb {
+    /// sr = sample rate, e.g. 44100
     pub fn new(sr: usize) -> Self {
         let mut freeverb = Freeverb {
             combs: [
@@ -127,6 +128,9 @@ impl Freeverb {
         freeverb
     }
 
+    /// This function is used to process one sample of audio.
+    /// The input represents the left and right channels of the audio input.
+    /// The output represents the processed left and right channels of the audio output.
     pub fn tick(&mut self, input: (f64, f64)) -> (f64, f64) {
         let input_mixed = (input.0 + input.1) * FIXED_GAIN * self.input_gain;
 
